@@ -12,7 +12,15 @@ exports.generateToken = function (params) {
 exports.verifyToken = function (req, res, next) {
     var bearerHeader = req.headers['authorization'];
     if (!bearerHeader) {
-        res.sendStatus(403);
+        res.status(401).send({
+            'errors': [
+                {
+                    'status': '401',
+                    'title':  'Unauthorized',
+                    'detail': ''
+                }
+            ]
+        });
         return;
     }
 
@@ -32,7 +40,7 @@ exports.verifyToken = function (req, res, next) {
                     }
                 ]
             });
-            return
+            return;
         }
 
         req.token = token;

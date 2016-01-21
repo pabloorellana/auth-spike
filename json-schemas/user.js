@@ -5,36 +5,21 @@ var email    = { 'type': 'string', 'minLength': 6 },
 var credentials = {
     'id': 'user',
     'type': 'object',
-    'properties': {
-        'email': email,
-        'password': password
-    },
+    'properties': { email, password },
     'required': ['email', 'password']
 };
 
 var whenCreate = {
     'id': 'user',
     'type': 'object',
-    'properties': {
-        'email'   : email,
-        'username': username,
-        'password': password
-    },
+    'properties': { email, username, password },
     'required': ['email', 'password', 'username']
 };
 
 var whenUpdate = {
     'id': 'user',
     'type': 'object',
-    'properties': {
-        'email'   : email,
-        'username': username,
-        'password': password
-    }
+    'properties': { email, username, password }
 };
 
-module.exports = {
-    credentials: credentials,
-    whenCreate: whenCreate,
-    whenUpdate: whenUpdate
-}
+module.exports = { credentials, whenCreate, whenUpdate };
