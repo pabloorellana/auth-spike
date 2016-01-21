@@ -20,8 +20,7 @@ app.use(function(req, res, next) {
     next();
 });
 
-require('./controllers/auth.js')(app);
-require('./controllers/users.js')(app);
+app.use(require('./routes'));
 
 process.on('uncaughtException', function(err) {
     console.log(err);
