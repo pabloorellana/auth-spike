@@ -6,21 +6,26 @@ module.exports = function (app) {
         userSchema = require('../json-schemas/user.js'),
         schemaValidator = require('../utils/schema-validation.js');
 
-    app.post('/authenticate', schemaValidator.validate(userSchema), function(req, res) {
-        var params = {
-            email: req.body.email,
-            password: req.body.password
-        };
+    app.post('/authenticate', schemaValidator.validate(userSchema.credentials), function(req, res) {
 
-        User.findOne({ email: params.email}).then(function (user) {
+        User.findOne({ email: req.body.email }).then(function (user) {
             if (!user) {
-                res.json({ data: 'User not found.'});
+                res.status(404).send({
+                    'errors': [
+                        {
+                            'status': '404',
+                            'title':  'User Not Found',
+                            'detail': 'Could not find any user ' + req.body.email
+                        }
+                    ]
+                });
+
                 return;
             }
 
 
-            if (user.validPassword(params.password)) {
-                res.json({ 
+            if (user.validPassword(req.body.password)) {
+                res.json({
                     data: formatter.excludeProperties(user, { password: 0, token: 0 }),
                     token: user.token
                 });
@@ -28,20 +33,44 @@ module.exports = function (app) {
                return;
             }
 
-            res.json({ data: 'Incorrect email or password' });
-        })
-        .catch(function (err) {
-            res.sendStatus(500);
+            res.status(401).send({
+                'errors': [
+                    {
+                        'status': '401',
+                        'title':  'Invalid Credentials',
+                        'detail': 'Incorrect email or password'
+                    }
+                ]
+            });
+        }).catch(function (err) {
+            res.status(500).send({
+                'errors': [
+                    {
+                        'status': '500',
+                        'title':  'Internal Server Error',
+                        'detail': 'Something went wrong'
+                    }
+                ]
+            });
             return;
         });
     });
 
 
-    app.post('/signin', schemaValidator.validate(userSchema), function(req, res) {
+    app.post('/signin', schemaValidator.validate(userSchema.whenCreate), function(req, res) {
 
         User.findOne({ email: req.body.email }).then(function (result) {
             if (result) {
-                res.json({ data: 'User already exists.'});
+                res.status(409).send({
+                    'errors': [
+                        {
+                            'status': '409',
+                            'title':  'User Already Exists',
+                            'detail': 'There is already a registered user with the email ' + req.body.email
+                        }
+                    ]
+                });
+
                 return true;
             }
 
@@ -49,6 +78,7 @@ module.exports = function (app) {
             if (userExists) { return; }
 
             var params = {
+                username: req.body.username,
                 email: req.body.email,
                 password: req.body.password
             };
@@ -58,11 +88,19 @@ module.exports = function (app) {
                     data: formatter.excludeProperties(user, { password: 0, token: 0 }),
                     token: user.token
                 });
-                
+
                 return;
             });
         }).catch(function (err) {
-            res.sendStatus(500);
+            res.status(500).send({
+                'errors': [
+                    {
+                        'status': '500',
+                        'title':  'Internal Server Error',
+                        'detail': 'Something went wrong'
+                    }
+                ]
+            });
             return;
         });
     });

@@ -4,6 +4,7 @@ var mongoose = require('mongoose'),
     Schema = mongoose.Schema;
 
 var UserSchema   = new Schema({
+    username: { type: String, unique: true, required: true },
     email: { type: String, unique: true, required: true },
     password: { type: String, required: true},
     token: { type: String }
@@ -20,7 +21,7 @@ UserSchema.methods.validPassword = function(password) {
 
 UserSchema.pre('save', function (next) {
     this.password = generateHash(this.password);
-    this.token = jwtUtils.generateToken(this);
+    this.token = jwtUtils.generateToken({ _id: this._id, email: this.email });
     next();
 });
 

@@ -23,7 +23,15 @@ exports.verifyToken = function (req, res, next) {
 
     jwt.verify(token, JWT_SECRET, options, function (err, result) {
         if (err) {
-            res.sendStatus(403);
+            res.status(401).send({
+                'errors': [
+                    {
+                        'status': '401',
+                        'title':  'Access Token Expired',
+                        'detail': ''
+                    }
+                ]
+            });
             return
         }
 
