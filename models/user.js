@@ -18,7 +18,7 @@ UserSchema.methods.validPassword = function(password) {
     return bcrypt.compareSync(password, this.password);
 };
 
-UserSchema.pre('save', function (next){
+UserSchema.pre('save', function (next) {
     this.password = generateHash(this.password);
     this.token = jwtUtils.generateToken(this);
     next();

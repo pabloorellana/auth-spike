@@ -21,6 +21,7 @@ app.use(function(req, res, next) {
 });
 
 require('./controllers/auth.js')(app);
+require('./controllers/users.js')(app);
 
 process.on('uncaughtException', function(err) {
     console.log(err);

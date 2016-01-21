@@ -1,7 +1,8 @@
 module.exports = function (app) {
 
     var jwtUtils = require('../utils/jwt.js'),
-        UserModel = require('../models/user'),
+        User = require('../models/user'),
+        formatter = require('../utils/formatter.js'),
         userSchema = require('../json-schemas/user.js'),
         schemaValidator = require('../utils/schema-validation.js');
 
@@ -11,16 +12,25 @@ module.exports = function (app) {
             password: req.body.password
         };
 
-        UserModel.findOne({ email: params.email}).then(function (user) {
+        User.findOne({ email: params.email}).then(function (user) {
+            if (!user) {
+                res.json({ data: 'User not found.'});
+                return;
+            }
+
+
             if (user.validPassword(params.password)) {
-               res.json({ data: user, token: user.token });
+                res.json({ 
+                    data: formatter.excludeProperties(user, { password: 0, token: 0 }),
+                    token: user.token
+                });
+
                return;
             }
 
-            res.json({ data: 'Incorrect email/password' });
+            res.json({ data: 'Incorrect email or password' });
         })
         .catch(function (err) {
-            console.log(err);
             res.sendStatus(500);
             return;
         });
@@ -29,7 +39,7 @@ module.exports = function (app) {
 
     app.post('/signin', schemaValidator.validate(userSchema), function(req, res) {
 
-        UserModel.findOne({ email: req.body.email }).then(function (result) {
+        User.findOne({ email: req.body.email }).then(function (result) {
             if (result) {
                 res.json({ data: 'User already exists.'});
                 return true;
@@ -43,8 +53,12 @@ module.exports = function (app) {
                 password: req.body.password
             };
 
-            return UserModel.create(params).then(function (user) {
-                res.json({ data: user, token: user.token });
+            return User.create(params).then(function (user) {
+                res.json({
+                    data: formatter.excludeProperties(user, { password: 0, token: 0 }),
+                    token: user.token
+                });
+                
                 return;
             });
         }).catch(function (err) {
@@ -53,12 +67,12 @@ module.exports = function (app) {
         });
     });
 
-    app.get('/me', jwtUtils.verifyToken, function(req, res) {
-        UserModel.findOne({ token: req.token }).then(function (user) {
+    /*app.get('/me', jwtUtils.verifyToken, function(req, res) {
+        User.findOne({ token: req.token }).then(function (user) {
             res.json({ data: user, token: user.token });
         }).catch(function (err) {
             res.sendStatus(500);
             return;
         });
-    });
+    });*/
 }
