@@ -2,7 +2,7 @@
 
 var assert = require('chai').assert,
     sinon = require('sinon'),
-    proxyquire = require('proxyquire');
+    proxyquire = require('proxyquire').noCallThru();
 
 var token = 'jfggg897908dfkaei8634',
 
