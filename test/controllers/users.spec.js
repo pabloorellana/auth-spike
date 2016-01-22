@@ -14,8 +14,6 @@ var userModelMock = {
     },
 
     res = {
-        status: function () { return this; },
-        send: function () { return; },
         json: function () { return; }
     },
 
@@ -27,10 +25,7 @@ var userModelMock = {
 
     sandbox,
 
-    statusSpy,
-
-    sendSpy;
-
+    nextSpy;
 
 describe('users controller', function () {
 
@@ -42,9 +37,7 @@ describe('users controller', function () {
 
         sandbox = sinon.sandbox.create();
 
-        statusSpy = sandbox.spy(res, 'status'),
-
-        sendSpy = sandbox.spy(res, 'send');
+        nextSpy = sandbox.spy();
     });
 
     afterEach(function () {
@@ -53,7 +46,7 @@ describe('users controller', function () {
 
     describe('save()', function () {
 
-        it('should return 409 if the user already exists', function (done) {
+        it('should the res.errorInfo.status as 409 if the user already exists and call the "next" middleware', function (done) {
             var req = {
                 body: {
                     email: 'existinguser@user.com'
@@ -64,12 +57,13 @@ describe('users controller', function () {
                 return q.resolve({ username: 'someexistinguser' });
             });
 
-            usersController.save(req, res);
+            usersController.save(req, res, nextSpy);
 
             process.nextTick(function () {
-                assert(statusSpy.calledOnce);
-                assert(statusSpy.calledWith(409));
-                assert(sendSpy.calledOnce);
+                assert.isDefined(res.errorInfo);
+                assert.equal(res.errorInfo.status, 409);
+                assert.isString(res.errorInfo.title);
+                assert(nextSpy.calledOnce);
                 done();
             });
         });
@@ -106,6 +100,29 @@ describe('users controller', function () {
 
     describe('getAll()', function () {
 
+        it('should set the res.errorInfo.status as 404 if no users are found', function (done) {
+
+            var req = {
+                params: {
+                    userId: 'userid1'
+                }
+            };
+
+            sandbox.stub(userModelMock, 'find', function () {
+                return q.resolve([]);
+            });
+
+            usersController.getAll(req, res, nextSpy);
+
+            process.nextTick(function () {
+                assert.isDefined(res.errorInfo);
+                assert.equal(res.errorInfo.status, 404);
+                assert.isString(res.errorInfo.title);
+                assert(nextSpy.calledOnce);
+                done();
+            });
+        });
+
         it('should return all the users', function (done) {
 
             var jsonSpy = sandbox.spy(res, 'json');
@@ -131,7 +148,7 @@ describe('users controller', function () {
 
     describe('getOne()', function () {
 
-        it('should return 404 if the user is not found', function (done) {
+        it('should set the res.errorInfo.status as 404 if the specified user is not found', function (done) {
 
             var req = {
                 params: {
@@ -143,12 +160,13 @@ describe('users controller', function () {
                 return q.resolve(null);
             });
 
-            usersController.getOne(req, res);
+            usersController.getOne(req, res, nextSpy);
 
             process.nextTick(function () {
-                assert(statusSpy.calledOnce);
-                assert(statusSpy.calledWith(404));
-                assert(sendSpy.calledOnce);
+                assert.isDefined(res.errorInfo);
+                assert.equal(res.errorInfo.status, 404);
+                assert.isString(res.errorInfo.title);
+                assert(nextSpy.calledOnce);
                 done();
             });
         });
@@ -179,7 +197,7 @@ describe('users controller', function () {
 
     describe('update()', function () {
 
-        it('should return 404 if the user is not found', function (done) {
+        it('should set the res.errorInfo.status as 404 if the specified user is not found', function (done) {
 
             var req = {
                 params: {
@@ -192,12 +210,13 @@ describe('users controller', function () {
                 return q.resolve(null);
             });
 
-            usersController.update(req, res);
+            usersController.update(req, res, nextSpy);
 
             process.nextTick(function () {
-                assert(statusSpy.calledOnce);
-                assert(statusSpy.calledWith(404));
-                assert(sendSpy.calledOnce);
+                assert.isDefined(res.errorInfo);
+                assert.equal(res.errorInfo.status, 404);
+                assert.isString(res.errorInfo.title);
+                assert(nextSpy.calledOnce);
                 done();
             });
         });
@@ -228,7 +247,7 @@ describe('users controller', function () {
 
     describe('remove()', function () {
 
-        it('should return 404 if the user is not found', function (done) {
+        it('should set the res.errorInfo.status as 404 if the specified user is not found', function (done) {
 
             var req = {
                 params: {
@@ -240,12 +259,13 @@ describe('users controller', function () {
                 return q.resolve(null);
             });
 
-            usersController.remove(req, res);
+            usersController.remove(req, res, nextSpy);
 
             process.nextTick(function () {
-                assert(statusSpy.calledOnce);
-                assert(statusSpy.calledWith(404));
-                assert(sendSpy.calledOnce);
+                assert.isDefined(res.errorInfo);
+                assert.equal(res.errorInfo.status, 404);
+                assert.isString(res.errorInfo.title);
+                assert(nextSpy.calledOnce);
                 done();
             });
         });

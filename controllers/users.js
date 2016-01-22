@@ -3,29 +3,12 @@
 var formatter = require('../utils/formatter.js'),
     User = require('../models/user');
 
-var internalServerErrorStatus = {
-    'errors': [
-        {
-            'status': '500',
-            'title' : 'Internal Server Error',
-            'detail': 'Something went wrong'
-        }
-    ]
-};
-
-function save (req, res) {
+function save (req, res, next) {
 
     User.findOne({ email: req.body.email }).then(function (result) {
         if (result) {
-            res.status(409).send({
-                'errors': [
-                    {
-                        'status': '409',
-                        'title':  'User Already Exists',
-                        'detail': 'There is already a registered user with the email ' + req.body.email
-                    }
-                ]
-            });
+            res.errorInfo = { status: 409, title: 'User Already Exists' };
+            next();
             return true;
         }
 
@@ -45,37 +28,36 @@ function save (req, res) {
             });
         });
     }).catch(function (err) {
-        res.status(500).send(internalServerErrorStatus);
+        res.errorInfo = { status: 500 };
+        next();
     });
 };
 
-function getAll (req, res) {
+function getAll (req, res, next) {
     User.find().then(function (users) {
+        if (users.length === 0) {
+            res.errorInfo = { status: 404, title: 'No Users Found' };
+            return next();
+        }
+
         res.json({
             data: users.map(function (user) {
                 return formatter.excludeProperties(user, { password: 0, token: 0 });
             })
         });
     }).catch(function (err) {
-        res.status(500).send(internalServerErrorStatus);
+        res.errorInfo = { status: 500 };
+        next();
     });
 };
 
-function getOne (req, res) {
+function getOne (req, res, next) {
     var userId = req.params.userId;
 
     User.findOne({ _id: userId }).then(function (user) {
         if (!user) {
-            res.status(404).send({
-                'errors': [
-                    {
-                        'status': '404',
-                        'title':  'User Not Found',
-                        'detail': 'Could not find any user with the id' + userId
-                    }
-                ]
-            });
-            return;
+            res.errorInfo = { status: 404, title: 'User Not Found' };
+            return next();
         }
 
         res.json({
@@ -83,25 +65,18 @@ function getOne (req, res) {
             token: req.token
         });
     }).catch(function (err) {
-        res.status(500).send(internalServerErrorStatus);
+        res.errorInfo = { status: 500 };
+        next();
     });
 };
 
-function update (req, res) {
+function update (req, res, next) {
     var userId = req.params.userId;
 
     User.findByIdAndUpdate(userId, req.body, { new: true }).then(function (user) {
         if (!user) {
-            res.status(404).send({
-                'errors': [
-                    {
-                        'status': '404',
-                        'title':  'User Not Found',
-                        'detail': 'Could not find any user with the id' + userId
-                    }
-                ]
-            });
-            return;
+            res.errorInfo = { status: 404, title: 'User Not Found' };
+            return next();
         }
 
         res.json({
@@ -109,26 +84,18 @@ function update (req, res) {
             token: req.token
         });
     }).catch(function (err) {
-        res.status(500).send(internalServerErrorStatus);
-        return;
+        res.errorInfo = { status: 500 };
+        next();
     });
 };
 
-function remove (req, res) {
+function remove (req, res, next) {
     var userId = req.params.userId;
 
     User.findByIdAndRemove(userId).then(function (user) {
         if (!user) {
-            res.status(404).send({
-                'errors': [
-                    {
-                        'status': '404',
-                        'title':  'User Not Found',
-                        'detail': 'Could not find any user with the id' + userId
-                    }
-                ]
-            });
-            return;
+            res.errorInfo = { status: 404, title: 'User Not Found' };
+            return next();
         }
 
         res.json({
@@ -136,7 +103,8 @@ function remove (req, res) {
             token: req.token
         });
     }).catch(function (err) {
-        res.status(500).send(internalServerErrorStatus);
+        res.errorInfo = { status: 500 };
+        next();
     });
 };
 
