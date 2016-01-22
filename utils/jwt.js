@@ -1,7 +1,7 @@
 var jwt = require('jsonwebtoken'),
     JWT_SECRET = require('../config/jwt-secret.json').secret;
 
-exports.generateToken = function (params) {
+function generateToken (params) {
     var options = {
         expiresIn: '30m'
     };
@@ -9,7 +9,7 @@ exports.generateToken = function (params) {
     return jwt.sign(JSON.parse(JSON.stringify(params)), JWT_SECRET, options);
 }
 
-exports.verifyToken = function (req, res, next) {
+function verifyToken (req, res, next) {
     var bearerHeader = req.headers['authorization'];
     if (!bearerHeader) {
         res.status(401).send({
@@ -47,3 +47,5 @@ exports.verifyToken = function (req, res, next) {
         next();
     });
 }
+
+module.exports = { generateToken, verifyToken };
