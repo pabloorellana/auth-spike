@@ -25,7 +25,13 @@ var jsonschemaMock  = {
 
     schemaValidation,
 
-    sandbox;
+    sandbox,
+
+    statusSpy,
+
+    sendSpy,
+
+    nextSpy;
 
 describe('schema-validation', function () {
 
@@ -36,29 +42,29 @@ describe('schema-validation', function () {
         });
 
         sandbox = sinon.sandbox.create();
+
+        statusSpy = sandbox.spy(res, 'status'),
+
+        sendSpy = sandbox.spy(res, 'send'),
+
+        nextSpy = sandbox.spy();
     });
 
     afterEach(function () {
         sandbox.restore();
     });
 
-    describe('validate', function () {
+    describe('validate()', function () {
 
         it('should return 400 and not execute the "next" callback if there is any validation error', function () {
 
-            var jsonschemaStub = sandbox.stub(jsonschemaMock, 'validate', function () {
-                    return {
-                        errors: [{
-                            stack: 'instance requires username'
-                        }]
-                    }
-                }),
-
-                statusSpy = sandbox.spy(res, 'status'),
-
-                sendSpy = sandbox.spy(res, 'send'),
-
-                nextSpy = sandbox.spy();
+            sandbox.stub(jsonschemaMock, 'validate', function () {
+                return {
+                    errors: [{
+                        stack: 'instance requires username'
+                    }]
+                }
+            });
 
             schemaValidation.validate(schemaDefinition)(req, res, nextSpy);
 
@@ -73,13 +79,13 @@ describe('schema-validation', function () {
 
         it('should execute the "next" callback if there are no validation errors', function () {
 
-            var jsonschemaStub = sandbox.stub(jsonschemaMock, 'validate', function () {
-                    return {
-                        errors: []
-                    }
-                }),
+            var nextSpy = sandbox.spy();
 
-                nextSpy = sandbox.spy();
+            sandbox.stub(jsonschemaMock, 'validate', function () {
+                return {
+                    errors: []
+                }
+            });
 
             schemaValidation.validate(schemaDefinition)(req, res, nextSpy);
 

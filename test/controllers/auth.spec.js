@@ -47,7 +47,7 @@ describe('auth controller', function () {
         sandbox.restore();
     });
 
-    describe('authenticate', function () {
+    describe('authenticate()', function () {
 
         it('should return 404 if the user is not found', function (done) {
             var req = {
@@ -127,7 +127,7 @@ describe('auth controller', function () {
         });
     });
 
-    describe('signin', function () {
+    describe('signin()', function () {
 
         it('should return 409 if the user already exists', function (done) {
             var req = {
@@ -159,15 +159,16 @@ describe('auth controller', function () {
                     }
                 },
 
-                findOneStub = sandbox.stub(userModelMock, 'findOne', function () {
-                    return q.resolve(null);
-                }),
-
-                createUserStub = sandbox.stub(userModelMock, 'create', function (params) {
-                    return q.resolve(params);
-                }),
 
                 jsonSpy = sandbox.spy(res, 'json');
+
+            sandbox.stub(userModelMock, 'findOne', function () {
+                return q.resolve(null);
+            });
+
+            sandbox.stub(userModelMock, 'create', function (params) {
+                return q.resolve(params);
+            });
 
             authController.signin(req, res);
 

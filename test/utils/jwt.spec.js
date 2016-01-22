@@ -26,7 +26,11 @@ var token = 'jfggg897908dfkaei8634',
 
     jwtUtils,
 
-    sandbox;
+    sandbox,
+
+    statusSpy,
+
+    sendSpy;
 
 describe('jwtUtils', function () {
 
@@ -38,29 +42,30 @@ describe('jwtUtils', function () {
         });
 
         sandbox = sinon.sandbox.create();
+
+        statusSpy = sandbox.spy(res, 'status');
+
+        sendSpy = sandbox.spy(res, 'send');
     });
 
     afterEach(function () {
         sandbox.restore();
     });
 
-    describe('verifyToken', function () {
+    describe('verifyToken()', function () {
 
         it('should return 401 if "authorization" header is not present', function () {
             var req = {
-                    headers: {
-                        contentType: 'application/json'
-                    }
-                },
-
-                spyStatus = sandbox.spy(res, 'status'),
-
-                spySend = sandbox.spy(res, 'send');
+                headers: {
+                    contentType: 'application/json'
+                }
+            };
 
             jwtUtils.verifyToken(req, res, function () {});
-            assert(spyStatus.calledOnce);
-            assert(spyStatus.calledWith(401));
-            assert(spySend.calledOnce);
+
+            assert(statusSpy.calledOnce);
+            assert(statusSpy.calledWith(401));
+            assert(sendSpy.calledOnce);
         });
 
         it('should return 401 if the token is invalid', function () {
@@ -69,19 +74,16 @@ describe('jwtUtils', function () {
                     cb('tokenValidationException', null);
                 }),
 
-                jwtStub = sandbox.stub(jwtMock, 'verify', verifyCallbackSpy),
-
-                spyStatus = sandbox.spy(res, 'status'),
-
-                spySend = sandbox.spy(res, 'send'),
-
                 req = {
                     headers: {
                         authorization: 'bearer ' + token
                     }
                 };
 
+            sandbox.stub(jwtMock, 'verify', verifyCallbackSpy);
+
             jwtUtils.verifyToken(req, res);
+
             assert(verifyCallbackSpy.calledOnce);
             assert(verifyCallbackSpy.calledWith(
                     token,
@@ -89,9 +91,9 @@ describe('jwtUtils', function () {
                     { ignoreExpiration: false }
                 )
             );
-            assert(spyStatus.calledOnce);
-            assert(spyStatus.calledWith(401));
-            assert(spySend.calledOnce);
+            assert(statusSpy.calledOnce);
+            assert(statusSpy.calledWith(401));
+            assert(sendSpy.calledOnce);
         });
 
         it('should set the "token" attribute to the "response" object and execute the "next" callback', function () {
@@ -102,17 +104,16 @@ describe('jwtUtils', function () {
 
                 nextSpy = sandbox.spy(),
 
-                jwtStub = sandbox.stub(jwtMock, 'verify', verifyCallbackSpy),
-
                 req = {
                     headers: {
                         authorization: 'bearer ' + token
                     }
-                },
+                };
 
-                response = { };
+            sandbox.stub(jwtMock, 'verify', verifyCallbackSpy);
 
-            jwtUtils.verifyToken(req, response, nextSpy);
+            jwtUtils.verifyToken(req, { }, nextSpy);
+
             assert(verifyCallbackSpy.calledOnce);
             assert(verifyCallbackSpy.calledWith(
                     token,

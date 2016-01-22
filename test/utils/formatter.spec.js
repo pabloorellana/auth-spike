@@ -12,7 +12,7 @@ var userMock = {
 
 describe('formatter', function () {
 
-    describe('excludeProperties', function() {
+    describe('excludeProperties()', function() {
 
         it('should exclude the properties configured as 0 from an object', function () {
 
